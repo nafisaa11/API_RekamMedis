@@ -21,7 +21,8 @@ export async function createDokterController(req: Request, res: Response) {
     !dokter.no_hp ||
     !dokter.email ||
     !dokter.spesialisasi ||
-    !dokter.tanggal_lisensi
+    !dokter.tanggal_lisensi||
+    !dokter.password
   ) {
     return res.status(400).send({
       status: 400,

@@ -16,6 +16,7 @@ export interface Dokter{
     npi: string;
     spesialisasi: string;
     tanggal_lisensi: Date;
+    password: string;
 }
 
 export interface DokterQueryResult extends RowDataPacket {
@@ -29,4 +30,5 @@ export interface DokterQueryResult extends RowDataPacket {
     npi: string;
     spesialisasi: string;
     tanggal_lisensi: Date;
+    password: string;
 }
