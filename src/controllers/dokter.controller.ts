@@ -1,18 +1,17 @@
 import type { Response, Request } from 'express';
 import { Dokter } from '../models/dokter.model';
-
 import {
   createDokter,
   getDokters,
-  // updateDokter,
-  // deleteDokter,
+  deleteDokter,
+  updateDokter, // Pastikan ini diimpor
 } from "../service/dokter.service";
 import { serverError } from '../utils/response';
 
 export async function createDokterController(req: Request, res: Response) {
   const dokter = req.body as Dokter;
 
-  // ? : check if those field are provided
+  // Check if all required fields are provided
   if (
     !dokter.nama ||
     !dokter.npi ||
@@ -21,19 +20,18 @@ export async function createDokterController(req: Request, res: Response) {
     !dokter.no_hp ||
     !dokter.email ||
     !dokter.spesialisasi ||
-    !dokter.tanggal_lisensi||
+    !dokter.tanggal_lisensi ||
     !dokter.password
   ) {
     return res.status(400).send({
       status: 400,
-      message: 'The field must be filled',
+      message: 'All fields must be filled',
     });
   }
 
   try {
     const result = await createDokter(dokter);
-
-    return res.status(200).send(result);
+    return res.status(result.status).send(result); // Gunakan status yang sesuai
   } catch (error) {
     console.error('An error occurred while creating dokter: ', error);
     return res.status(serverError.status).send(serverError);
@@ -44,13 +42,7 @@ export async function getDoktersController(req: Request, res: Response) {
   try {
     const result = await getDokters();
 
-    // ? : check if result doesn't have status or invalid status
-    if (
-      result &&
-      result.status >= 200 &&
-      result.status < 300 &&
-      typeof result.status == 'number'
-    ) {
+    if (result && result.status >= 200 && result.status < 300) {
       return res.status(result.status).send(result);
     } else {
       throw new Error('Invalid status code');
@@ -61,89 +53,69 @@ export async function getDoktersController(req: Request, res: Response) {
   }
 }
 
+export async function deleteDokterController(req: Request, res: Response) {
+  const id = req.params.id;
 
-// export async function updateDokterController(req: Request, res: Response) {
-//   const id = parseInt(req.params.id);
+  if (!id) {
+    return res.status(400).send({
+      status: 400,
+      message: 'Invalid dokter ID',
+    });
+  }
 
-//   // ? : check if id is not a number
-//   if (isNaN(id)) {
-//     return res.status(400).send({
-//       status: 400,
-//       message: 'Invalid dokter ID',
-//     });
-//   }
+  try {
+    const result = await deleteDokter(id);
 
-//   const dokter = req.body as Dokter;
+    if (result && result.status >= 200 && result.status < 300) {
+      return res.status(result.status).send(result);
+    } else {
+      throw new Error('Invalid status code');
+    }
+  } catch (error) {
+    console.error('An error occurred while deleting dokter: ', error);
+    return res.status(serverError.status).send(serverError);
+  }
+}
 
-//   // ? : check if those field are provided
-//   if (
-//     !dokter.nama_dokter ||
-//     !dokter.npi ||
-//     !dokter.jenis_kelamin ||
-//     !dokter.tanggal_lahir ||
-//     !dokter.telepon ||
-//     !dokter.email ||
-//     !dokter.password ||
-//     !dokter.spesialisasi ||
-//     !dokter.status_lisensi ||
-//     !dokter.tanggal_lisensi ||
-//     !dokter.nama_lisensi
-//   ) {
-//     return res.status(400).send({
-//       status: 400,
-//       message: 'The field are required',
-//     });
-//   }
+export async function updateDokterController(req: Request, res: Response) {
+  const id = req.params.id;
+  const dokterUpdates = req.body as Dokter;
 
-//   try {
-//     const result = await updateDokter(id, dokter);
+  if (!id) {
+    return res.status(400).send({
+      status: 400,
+      message: 'Invalid dokter ID',
+    });
+  }
 
-//     // ? : check if result doesn't have status or invalid status
-//     if (
-//       result.status &&
-//       result.status >= 200 &&
-//       result.status < 300 &&
-//       typeof result.status == 'number'
-//     ) {
-//       return res.status(result.status).send(result);
-//     } else if (result.status == 404) {
-//       return res.status(result.status).send(result);
-//     } else {
-//       throw new Error('Invalid status code');
-//     }
-//   } catch (error) {
-//     console.error('An error occurred while updating dokter: ', error);
-//     return res.status(serverError.status).send(serverError);
-//   }
-// }
+  // Check if all required fields are provided (optional, adjust as necessary)
+  if (
+    !dokterUpdates.nama ||
+    !dokterUpdates.npi ||
+    !dokterUpdates.jenis_kelamin ||
+    !dokterUpdates.tanggal_lahir ||
+    !dokterUpdates.no_hp ||
+    !dokterUpdates.email ||
+    !dokterUpdates.spesialisasi ||
+    !dokterUpdates.tanggal_lisensi
+  ) {
+    return res.status(400).send({
+      status: 400,
+      message: 'All fields must be filled',
+    });
+  }
 
-// export async function deleteDokterController(req: Request, res: Response) {
-//   const id = parseInt(req.params.id);
+  try {
+    const result = await updateDokter(id, dokterUpdates);
 
-//   // ? : check if id is not a number
-//   if (isNaN(id)) {
-//     return res.status(400).send({
-//       status: 400,
-//       message: 'Invalid dokter ID',
-//     });
-//   }
-
-//   try {
-//     const result = await deleteDokter(id);
-
-//     // ? : check if result doesn't have status or invalid status
-//     if (
-//       result.status &&
-//       result.status >= 200 &&
-//       result.status < 300 &&
-//       typeof result.status == 'number'
-//     ) {
-//       return res.status(result.status).send(result);
-//     } else {
-//       throw new Error('Invalid status code');
-//     }
-//   } catch (error) {
-//     console.error('An error occurred while deleting dokter: ', error);
-//     return res.status(serverError.status).send(serverError);
-//   }
-// }
+    // Cek status dari hasil yang dikembalikan
+    if (result.status >= 200 && result.status < 300) {
+      return res.status(result.status).send(result);
+    } else {
+      throw new Error('Invalid status code');
+    }
+  } catch (error) {
+    console.error('An error occurred while updating dokter: ', error);
+    return res.status(serverError.status).send(serverError);
+  }
+}

@@ -9,6 +9,7 @@ export interface Dokter{
     id_dokter: string;
     nama: string;
     email: string;
+    password: string;
     jenis_kelamin: JenisKelamin;
     no_hp: string;
     tanggal_lahir: Date;
@@ -16,13 +17,14 @@ export interface Dokter{
     npi: string;
     spesialisasi: string;
     tanggal_lisensi: Date;
-    password: string;
+    
 }
 
 export interface DokterQueryResult extends RowDataPacket {
     id_dokter: string;
     nama: string;
     email: string;
+    password: string;
     jenis_kelamin: JenisKelamin;
     no_hp: string;
     tanggal_lahir: Date;
@@ -30,5 +32,5 @@ export interface DokterQueryResult extends RowDataPacket {
     npi: string;
     spesialisasi: string;
     tanggal_lisensi: Date;
-    password: string;
+    
 }

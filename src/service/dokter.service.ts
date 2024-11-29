@@ -1,24 +1,15 @@
 import { Dokter, DokterQueryResult } from './../models/dokter.model';
-
-import bcrypt, { compare, hash } from 'bcrypt';
-
-import getConnection from '../database';
 import { ResultSetHeader } from 'mysql2';
-import { createToken } from '../utils/token';
+import getConnection from '../database';
 
-
-export async function getDokters () {
+export async function getDokters() {
   const db = await getConnection();
 
-  // ? : check if the database connection is successful
   if (!db) throw new Error('Cannot connect to database');
 
   try {
-    const [rows] = await db.query<DokterQueryResult[]>(
-      'SELECT * FROM dokter'
-    );
+    const [rows] = await db.query<DokterQueryResult[]>('SELECT * FROM dokter');
 
-    // ? : check if the Dokters are found
     if (rows.length === 0) {
       return {
         status: 404,
@@ -45,16 +36,14 @@ export async function getDokters () {
 export async function createDokter(bodyRequest: Dokter) {
   const db = await getConnection();
 
-  // ? : Check if the database connection is successful
   if (!db) throw new Error('Cannot connect to database');
 
   try {
     const [rowsEmail] = await db.query<DokterQueryResult[]>(
-      'SELECT * FROM dokter WHERE email = ?',
+      ' SELECT * FROM dokter WHERE email = ?',
       [bodyRequest.email]
     );
 
-    // ? Check if the email already exists
     if (rowsEmail.length > 0) {
       return {
         status: 409,
@@ -67,7 +56,6 @@ export async function createDokter(bodyRequest: Dokter) {
       [bodyRequest.no_hp]
     );
 
-    // ? Check if the telepon number already exists
     if (rowsTelepon.length > 0) {
       return {
         status: 409,
@@ -75,13 +63,13 @@ export async function createDokter(bodyRequest: Dokter) {
       };
     }
 
-    // ? Insert new dokter
     const [result] = await db.query<ResultSetHeader>(
-      'INSERT INTO dokter (id_dokter, nama, email, jenis_kelamin, no_hp, tanggal_lahir, alamat, npi, spesialisasi, tanggal_lisensi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO dokter (id_dokter, nama, email, password, jenis_kelamin, no_hp, tanggal_lahir, alamat, npi, spesialisasi, tanggal_lisensi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         bodyRequest.id_dokter,
         bodyRequest.nama,
         bodyRequest.email,
+        bodyRequest.password,
         bodyRequest.jenis_kelamin,
         bodyRequest.no_hp,
         bodyRequest.tanggal_lahir,
@@ -92,7 +80,6 @@ export async function createDokter(bodyRequest: Dokter) {
       ]
     );
 
-    // ? Check if the insert was successful
     if (result.affectedRows === 0) {
       return {
         status: 500,
@@ -100,7 +87,6 @@ export async function createDokter(bodyRequest: Dokter) {
       };
     }
 
-    // ? Return success response
     return {
       status: 201,
       message: 'Dokter created successfully',
@@ -111,114 +97,100 @@ export async function createDokter(bodyRequest: Dokter) {
       status: 500,
       message: 'An error occurred while creating dokter',
     };
-  } 
+  }
 }
 
+export async function deleteDokter(id: string) {
+  const db = await getConnection();
 
-// export async function updateDokter (id: number, bodyRequest: Dokter) {
-//   const db = await getConnection();
+  if (!db) throw new Error('Cannot connect to database');
 
-//   // ? : check if the database connection is successful
-//   if (!db) throw new Error('Cannot connect to database');
+  try {
+    const [rows] = await db.query<DokterQueryResult[]>(
+      'SELECT * FROM dokter WHERE id_dokter = ?',
+      [id]
+    );
 
-//   try {
-//     const [rows] = await db.query<DokterQueryResult[]>(
-//       'SELECT * FROM dokter WHERE id_dokter = ?',
-//       [id]
-//     );
+    if (rows.length === 0) {
+      return {
+        status: 404,
+        message: `Dokter with id ${id} not found`,
+      };
+    }
 
-//     // ? : check if the dokter is found
-//     if (rows.length === 0) {
-//       return {
-//         status: 404,
-//         message: 'Dokter not found',
-//       };
-//     }
+    const [result] = await db.query<ResultSetHeader>(
+      'DELETE FROM dokter WHERE id_dokter = ?',
+      [id]
+    );
 
-//     // ? : hash the password
-//     const hashedPassword = await hash(bodyRequest.password, 10);
+    return {
+      status: 200,
+      message: `Dokter with id ${id} deleted successfully!`,
+    };
+  } catch (error) {
+    console.error('Database query error:', error);
+    return {
+      status: 500,
+      message: 'Internal server error',
+    };
+  } finally {
+    await db.end();
+  }
+}
 
-//     const [result] = await db.query<ResultSetHeader>(
-//       'UPDATE dokter SET npi = ?, nama_dokter = ?, jenis_kelamin = ?, tanggal_lahir = ?, telepon = ?, email = ?, password = ?, spesialisasi = ?, status_lisensi = ?, tanggal_lisensi = ?, nama_lisensi = ? WHERE id_dokter = ?',
-//       [
-//         bodyRequest.npi,
-//         bodyRequest.nama_dokter,
-//         bodyRequest.jenis_kelamin,
-//         bodyRequest.tanggal_lahir,
-//         bodyRequest.telepon,
-//         bodyRequest.email,
-//         hashedPassword,
-//         bodyRequest.spesialisasi,
-//         bodyRequest.status_lisensi,
-//         bodyRequest.tanggal_lisensi,
-//         bodyRequest.nama_lisensi,
-//         id,
-//       ]
-//     );
+export async function updateDokter(id: string, bodyRequest: Dokter) {
+  const db = await getConnection();
 
-//     // ? : check if the result is empty
-//     if (result.affectedRows === 0) {
-//       return {
-//         status: 500,
-//         message: 'Failed to update dokter',
-//       };
-//     }
+  if (!db) throw new Error('Cannot connect to database');
 
-//     return {
-//       status: 200,
-//       message: 'Update dokter successful',
-//       payload: {
-//         id,
-//         ...bodyRequest,
-//       },
-//     };
-//   } catch (error) {
-//     console.error('Database query error:', error);
-//     return {
-//       status: 500,
-//       message: 'Internal server error',
-//     };
-//   } finally {
-//     await db.end();
-//   }
-// }
+  try {
+    const [rows] = await db.query<DokterQueryResult[]>(
+      'SELECT * FROM dokter WHERE id_dokter = ?',
+      [id]
+    );
 
-// export async function deleteDokter(id: number) {
-//   const db = await getConnection();
+    if (rows.length === 0) {
+      return {
+        status: 404,
+        message: `Dokter with id ${id} not found`,
+      };
+    }
 
-//   // ? : check if the database connection is successful
-//   if (!db) throw new Error('Cannot connect to database');
+    const [result] = await db.query<ResultSetHeader>(
+      'UPDATE dokter SET nama = ?, email = ?, password = ?, jenis_kelamin = ?, no_hp = ?, tanggal_lahir = ?, alamat = ?, npi = ?, spesialisasi = ?, tanggal_lisensi = ? WHERE id_dokter = ?',
+      [
+        bodyRequest.nama,
+        bodyRequest.email,
+        bodyRequest.password,
+        bodyRequest.jenis_kelamin,
+        bodyRequest.no_hp,
+        bodyRequest.tanggal_lahir,
+        bodyRequest.alamat,
+        bodyRequest.npi,
+        bodyRequest.spesialisasi,
+        bodyRequest.tanggal_lisensi,
+        id,
+      ]
+    );
 
-//   try {
-//     const [rows] = await db.query<DokterQueryResult[]>(
-//       'SELECT * FROM dokter WHERE id_dokter = ?',
-//       [id]
-//     );
+    if (result.affectedRows === 0) {
+      return {
+        status: 500,
+        message: 'Failed to update dokter',
+      };
+    }
 
-//     // ? : check if there is no Dokter with the id
-//     if (rows.length === 0) {
-//       return {
-//         status: 404,
-//         message: `Dokter with id ${id} not found`,
-//       };
-//     }
-
-//     const [result] = await db.query<ResultSetHeader>(
-//       'DELETE FROM dokter WHERE id_dokter = ?',
-//       [id]
-//     );
-
-//     // ! : return the deleted Dokter
-//     return {
-//       status: 200,
-//       message: `Dokter with id ${id} deleted successfully!`,
-//     };
-//   } catch (error) {
-//     console.error('Database query error:', error);
-//     return {
-//       status: 500,
-//       message: 'Internal server error',
-//     };
-//   } finally {
-//     await db.end();
-//   }
+    return {
+      status: 200,
+      message: `Dokter with id ${id} updated successfully!`,
+    };
+  } catch (error) {
+    console.error('Database query error:', error);
+    return {
+      status: 500,
+      message: 'Internal server error',
+    };
+  } finally {
+    await db.end();
+  }
+}

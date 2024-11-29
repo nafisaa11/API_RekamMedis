@@ -1,22 +1,25 @@
 import { Router } from 'express';
 import { authenticateToken } from '../middleware/authenticateToken';
-import { authenticateUser } from '../middleware/authenticateUser';
+// import { authenticateUser  } from '../middleware/authenticateUser ';
 
 import {
   createDokterController,
-  getDoktersController
-  // getDokterByIdController,
-  // updateDokterController
+  getDoktersController,
+  deleteDokterController, // Pastikan ini diimpor
+  updateDokterController
 } from '../controllers/dokter.controller';
 
 const publicRoutes = Router();
 const protectedRoutes = Router();
 
+// Uncomment if you want to use authentication middleware
+// protectedRoutes.use(authenticateToken, authenticateUser );
+
 protectedRoutes
-  // .use(authenticateToken, authenticateUser)
   .get('/', getDoktersController)
   .post('/create', createDokterController)
-  // .put('/update/:id', updateDokterController)
+  .delete('/delete/:id', deleteDokterController)
+  .put('/update/:id', updateDokterController);
 
 const dokterRoutes = Router();
 dokterRoutes.use(publicRoutes);
