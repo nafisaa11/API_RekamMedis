@@ -1,1 +1,1 @@
-Backend API aplikasi website rekam medis dengan express
+Proyek ini merupakan Backend API untuk aplikasi website rekam medis yang dibangun menggunakan Express.js. API ini bertanggung jawab untuk menangani berbagai proses penting seperti manajemen data pasien, dokter, rekam medis, serta login pengguna.
